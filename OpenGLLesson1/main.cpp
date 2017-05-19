@@ -14,7 +14,8 @@ using namespace std;
 #define COLOR_YELLOW 0.8, 0.8, 0.1
 
 const int N = 10;
-const int windowX = 800, windowY = 600;
+const long double EPS = 1e-6;
+const int windowX = 800, windowY = 800;
 const int GAPY = windowY / N;
 const int GAPX = windowX / N;
 const double RGAPX = (.0 + GAPX) / windowX;
@@ -104,9 +105,16 @@ void DrawHorizontal(int i, int j, element* e) {
 		double xr = (1.0 + j) / N;
 		DrawLine(xl, y, (3 * xl + 1 * xr) / 4, y);
 		DrawLine(xr, y, (1 * xl + 3 * xr) / 4, y);
-		//TODO: check for EMF, reverse object direction.
-		DrawLine((3 * xl + 1 * xr) / 4, y - RGAPY / 3, (3 * xl + 1 * xr) / 4, y + RGAPY / 3);
-		DrawLine((1 * xl + 3 * xr) / 4, y - RGAPY / 6, (1 * xl + 3 * xr) / 4, y + RGAPY / 6);
+		if (abs(e->EMF) < EPS) {
+			DrawLine(xl, y, xr, y);		
+			e->type = 0; //this is not EMF, this is a wire
+		} else if (e->EMF > 0) {
+			DrawLine((3 * xl + 1 * xr) / 4, y - RGAPY / 3, (3 * xl + 1 * xr) / 4, y + RGAPY / 3);
+			DrawLine((1 * xl + 3 * xr) / 4, y - RGAPY / 6, (1 * xl + 3 * xr) / 4, y + RGAPY / 6);
+		} else if (e->EMF < 0) {
+			DrawLine((3 * xl + 1 * xr) / 4, y - RGAPY / 6, (3 * xl + 1 * xr) / 4, y + RGAPY / 6);
+			DrawLine((1 * xl + 3 * xr) / 4, y - RGAPY / 3, (1 * xl + 3 * xr) / 4, y + RGAPY / 3);
+		}
 	} 
 }
 
@@ -140,8 +148,18 @@ void DrawVertical(int i, int j, element* e) {
 		DrawLine(x, (3 * yl + 1 * yr) / 4, x, yl);
 		DrawLine(x, (1 * yl + 3 * yr) / 4, x, yr);
 		//TODO: check for EMF, reverse object direction.
-		DrawLine(x - RGAPX / 3, (1 * yl + 3 * yr) / 4, x + RGAPX / 3, (1 * yl + 3 * yr) / 4);
-		DrawLine(x - RGAPX / 6, (3 * yl + 1 * yr) / 4, x + RGAPX / 6, (3 * yl + 1 * yr) / 4);
+		if (abs(e->EMF) < EPS) {
+			DrawLine(x, yl, x, yr);
+			e->type = 0; //this is not EMF, this is a wire
+		}
+		else if (e->EMF > 0) {
+			DrawLine(x - RGAPX / 3, (1 * yl + 3 * yr) / 4, x + RGAPX / 3, (1 * yl + 3 * yr) / 4);
+			DrawLine(x - RGAPX / 6, (3 * yl + 1 * yr) / 4, x + RGAPX / 6, (3 * yl + 1 * yr) / 4);
+		}
+		else if (e->EMF < 0) {
+			DrawLine(x - RGAPX / 6, (1 * yl + 3 * yr) / 4, x + RGAPX / 6, (1 * yl + 3 * yr) / 4);
+			DrawLine(x - RGAPX / 3, (3 * yl + 1 * yr) / 4, x + RGAPX / 3, (3 * yl + 1 * yr) / 4);
+		}
 	}
 }
 
@@ -234,7 +252,7 @@ void Draw() {
 			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, x);
 		for (auto x : suffix)
 			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, x);
-		glutPostRedisplay();
+		//glutPostRedisplay();
 	}
 	for (int i = 1; i < N; ++i) {
 		for (int j = 0; j < N; ++j) {
@@ -362,6 +380,8 @@ void processKeyboard(unsigned char key,	int x, int y) {
 		} else if (key >= '0' && key <= '9') {
 			keep.push_back(key);
 		} else if (key == '.') {
+			keep.push_back(key);
+		} else if (key == '-') {
 			keep.push_back(key);
 		}
 	} else if (key == 'e') {
