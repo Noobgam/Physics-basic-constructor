@@ -1,0 +1,9 @@
+﻿  main.cpp
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(40): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(47): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(48): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(61): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(85): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(110): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+  OpenGLLesson1.vcxproj -> C:\Users\Noobgam\Desktop\Курсач\Debug\OpenGLLesson1.exe
+  OpenGLLesson1.vcxproj -> C:\Users\Noobgam\Desktop\Курсач\Debug\OpenGLLesson1.pdb (Partial PDB)

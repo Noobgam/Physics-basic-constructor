@@ -1,0 +1,10 @@
+﻿  main.cpp
+main.cpp(26): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+main.cpp(27): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+  Generating code
+  2 of 20 functions (10.0%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  OpenGLLesson1.vcxproj -> C:\Users\Noobgam\Desktop\Курсач\Release\OpenGLLesson1.exe
+  OpenGLLesson1.vcxproj -> C:\Users\Noobgam\Desktop\Курсач\Release\OpenGLLesson1.pdb (Full PDB)
