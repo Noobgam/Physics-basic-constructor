@@ -1,12 +1,22 @@
 ﻿  main.cpp
-c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(55): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(58): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
 c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(61): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(68): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(69): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(82): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(123): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(247): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(248): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(64): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(67): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(70): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(77): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(78): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(91): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(96): warning C4390: ';': empty controlled statement found; is this the intent?
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(103): warning C4390: ';': empty controlled statement found; is this the intent?
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(112): warning C4390: ';': empty controlled statement found; is this the intent?
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(130): warning C4390: ';': empty controlled statement found; is this the intent?
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(136): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(141): warning C4390: ';': empty controlled statement found; is this the intent?
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(149): warning C4390: ';': empty controlled statement found; is this the intent?
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(158): warning C4390: ';': empty controlled statement found; is this the intent?
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(179): warning C4390: ';': empty controlled statement found; is this the intent?
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(288): warning C4002: too many actual parameters for macro 'assert'
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(328): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\noobgam\desktop\курсач\opengllesson1\main.cpp(329): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
   OpenGLLesson1.vcxproj -> C:\Users\Noobgam\Desktop\Курсач\Debug\OpenGLLesson1.exe
   OpenGLLesson1.vcxproj -> C:\Users\Noobgam\Desktop\Курсач\Debug\OpenGLLesson1.pdb (Partial PDB)

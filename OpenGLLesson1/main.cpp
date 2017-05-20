@@ -1,8 +1,12 @@
 #include "glut.h"
 #include <Windows.h>
 #include <iostream>
+#include <assert.h>
+#include <functional>
+#include <map>
 #include <ostream>
 #include <string>
+#include <vector>
 #include <fstream>
 #include <algorithm>
 
@@ -12,6 +16,7 @@ using namespace std;
 #define COLOR_GRAY 0.3, 0.3, 0.3
 #define COLOR_RED 0.7, 0.2, 0.2
 #define COLOR_YELLOW 0.8, 0.8, 0.1
+#define COLOR_BLUE 0.1, 0.1, 0.8
 
 const int N = 10;
 const long double EPS = 1e-6;
@@ -45,6 +50,7 @@ struct element {
 
 element* horizontal_elements[N][N];
 element* vertical_elements[N][N];
+bool calculating = false;
 
 void setColor(int color) {
 	switch (color) {
@@ -56,6 +62,9 @@ void setColor(int color) {
 			break;
 		case 2:
 			glColor3f(COLOR_YELLOW);
+			break;
+		case 3:
+			glColor3f(COLOR_BLUE);
 			break;
 		default:
 			glColor3f(COLOR_GRAY);
@@ -84,12 +93,14 @@ void DrawHorizontal(int i, int j, element* e) {
 		double xl = (.0 +  j) / N;
 		double xr = (1.0 + j) / N;
 		DrawLine(xl, y, xr, y);
+		if (calculating); //TODO: this
 	} else if (e->type == 0) {
 		setColor(e->color);
 		double y = (.0 + i) / N;
 		double xl = (.0 + j) / N;
 		double xr = (1.0 + j) / N;
 		DrawLine(xl, y, xr, y);
+		if (calculating); //TODO: this
 	} else if (e->type == 1) {
 		setColor(e->color);
 		double y = (.0 + i) / N;
@@ -98,6 +109,7 @@ void DrawHorizontal(int i, int j, element* e) {
 		DrawLine(xl, y, (3 * xl + 1 * xr) / 4, y);
 		DrawLine(xr, y, (1 * xl + 3 * xr) / 4, y);
 		DrawRect((3 * xl + 1 * xr) / 4, y - RGAPY / 5, (1 * xl + 3 * xr) / 4, y + RGAPY / 5);
+		if (calculating); //TODO: this
 	} else if (e->type == 2) {
 		setColor(e->color);
 		double y = (.0 + i) / N;
@@ -115,6 +127,7 @@ void DrawHorizontal(int i, int j, element* e) {
 			DrawLine((3 * xl + 1 * xr) / 4, y - RGAPY / 6, (3 * xl + 1 * xr) / 4, y + RGAPY / 6);
 			DrawLine((1 * xl + 3 * xr) / 4, y - RGAPY / 3, (1 * xl + 3 * xr) / 4, y + RGAPY / 3);
 		}
+		if (calculating); //TODO: this
 	} 
 }
 
@@ -125,6 +138,7 @@ void DrawVertical(int i, int j, element* e) {
 		double yl = (.0 + j) / N;
 		double yr = (1.0 + j) / N;
 		DrawLine(x, yl, x, yr);
+		if (calculating); //TODO: this
 	}
 	else if (e->type == 0) {
 		setColor(e->color);
@@ -132,6 +146,7 @@ void DrawVertical(int i, int j, element* e) {
 		double yl = (.0 + j) / N;
 		double yr = (1.0 + j) / N;
 		DrawLine(x, yl, x, yr);
+		if (calculating); //TODO: this
 	} else if (e->type == 1) {
 		setColor(e->color);
 		double x = (.0 + i) / N;
@@ -140,6 +155,7 @@ void DrawVertical(int i, int j, element* e) {
 		DrawLine(x, (3 * yl + 1 * yr) / 4, x, yl);
 		DrawLine(x, (1 * yl + 3 * yr) / 4, x, yr);
 		DrawRect(x - RGAPX / 5, (3 * yl + 1 * yr) / 4, x + RGAPX / 5, (1 * yl + 3 * yr) / 4);
+		if (calculating); //TODO: this
 	} else if (e->type == 2) {
 		setColor(e->color);
 		double x = (.0 + i) / N;
@@ -160,6 +176,7 @@ void DrawVertical(int i, int j, element* e) {
 			DrawLine(x - RGAPX / 6, (1 * yl + 3 * yr) / 4, x + RGAPX / 6, (1 * yl + 3 * yr) / 4);
 			DrawLine(x - RGAPX / 3, (3 * yl + 1 * yr) / 4, x + RGAPX / 3, (3 * yl + 1 * yr) / 4);
 		}
+		if (calculating); //TODO: this
 	}
 }
 
@@ -224,6 +241,70 @@ void editHorizontal(int idy, int idx) {
 	}
 }
 
+struct edge {
+	int vertex;
+	element* el;
+	edge(int vertex, element* element) :
+		vertex(vertex),
+		el(element)
+	{}
+};
+
+void reCalculate(vector <vector <edge> > &g, map <pair <int, int>, int> &mp) {
+	vector <vector <edge> > v = g;
+	vector <vector <pair <element*, int> > > cycles; //<element, direction>
+	int n = g.size();
+	for (int i = 0; i < n; ) {
+		vector <char> used(n);
+		vector <pair <element*, int>> cycle;
+		vector <pair <element*, int> > pr(n);
+		vector <int> pv(n);
+		int c_start, c_end;
+		std::function<bool(int, int)> dfs;
+		dfs = [&dfs, &used, &v, &cycle, &pr, &c_start, &c_end, &pv] (int cur, int p) {
+			used[cur] = true;
+			for (auto it = v[cur].begin(); it != v[cur].end(); ++it) {
+				auto e = *it;
+				int to = e.vertex;
+				if (to == p)
+					continue;
+				if (to < cur) {
+					pr[to] = { e.el, -1 };
+					pv[to] = cur;
+				} else {
+					pr[to] = { e.el, 1 };
+					pv[to] = cur;
+				}
+				if (used[to]) {
+					c_start = to;
+					c_end =   cur;
+					cycle.push_back(pr[to]);
+					v[cur].erase(it);
+					for (auto it2 = v[to].begin(); it2 != v[to].end(); ++it2)
+						if (it2->vertex == cur) {
+							v[to].erase(it2);
+							return true;
+						}
+					assert(false, "Backward edge doesn't exist");
+				}
+				if (dfs(to, cur))
+					return true;
+			}
+			return false;
+		};
+		if (dfs(i, -1)) {
+			for (; c_end != c_start; c_end = pv[c_end]) 
+				cycle.push_back(pr[c_end]);
+			for (auto &x: cycle) {
+				x.first ->color = 3;
+			}
+		} else {
+			++i;
+		}
+	}
+	n = n;
+}
+
 void stopEditing() {
 	editing = false;
 	int type = current->type;
@@ -253,6 +334,40 @@ void Draw() {
 		for (auto x : suffix)
 			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, x);
 		//glutPostRedisplay();
+	}
+	if (calculating) {
+		map <pair <int, int>, int> mp;
+		for (int i = 1; i < N; ++i) {
+			for (int j = 1; j < N; ++j) {
+				mp[{i, j}] = mp.size();			
+			}
+		}
+		vector <vector <edge> > v(mp.size());
+		for (int i = 1; i < N; ++i)
+			for (int j = 1; j < N - 1; ++j) {
+				//literally {i, j} -> {i, j + 1}
+				element* tmp = horizontal_elements[i][j];
+				if (tmp != NULL) {
+					//horizontal_elements[i][j]->color = 3;
+					int l = mp[{i, j}];
+					int r = mp[{i, j + 1}];
+					v[l].push_back(edge(r, tmp));
+					v[r].push_back(edge(l, tmp));
+				}
+			}
+		for (int j = 1; j < N; ++j)
+			for (int i = 1; i < N - 1; ++i) {
+				//literally {i, j} -> {i + 1, j}
+				element* tmp = vertical_elements[j][i];
+				if (tmp != NULL) {
+					//tmp->color = 3;
+					int l = mp[{i, j}];
+					int r = mp[{i + 1, j}];
+					v[l].push_back(edge(r, tmp));
+					v[r].push_back(edge(l, tmp));
+				}
+			}
+		reCalculate(v, mp);
 	}
 	for (int i = 1; i < N; ++i) {
 		for (int j = 0; j < N; ++j) {
@@ -433,7 +548,9 @@ void processKeyboard(unsigned char key,	int x, int y) {
 		else {
 			cerr << "Nothing\n";
 		}
-	} 
+	} else if (key == 'q') {
+		calculating ^= 1;
+	}
 	Draw();
 }
 
