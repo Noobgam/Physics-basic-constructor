@@ -32,12 +32,14 @@ struct element {
 	int color;
 	double EMF;
 	double R;
+	double I;
 	element() {
 		type = 0;
 		color = -1;
 	}
 	element& nextType() {
 		++type;
+		I = 0;
 		if (type == TYPES)
 			type = 0;
 		if (type == 1)
@@ -186,7 +188,7 @@ bool editing = false;
 double keepx, keepy;
 string prefix, suffix;
 string keep;
-element* current;
+element* currentEdit;
 
 string doubleToStr(double dbl) {
 	string thing = to_string(dbl);
@@ -204,39 +206,39 @@ void editVertical(int idx, int idy) {
 	vertical_elements[idx][idy]->color = 2;
 	keepx = idx;
 	keepy = idy;
-	current = vertical_elements[idx][idy];
-	int type = current->type;
+	currentEdit = vertical_elements[idx][idy];
+	int type = currentEdit->type;
 	if (type == 1) {
 		prefix = "R =";
-		keep = doubleToStr(current->R);
+		keep = doubleToStr(currentEdit->R);
 		suffix = " ohm";
 	}
 	else if (type == 2) {
 		prefix = "EMF =";
-		keep = doubleToStr(current->EMF);
+		keep = doubleToStr(currentEdit->EMF);
 		suffix = " v.";
 	}
 }
 
 void editHorizontal(int idy, int idx) {
 	cerr << "Want to edit horizontal " << idy << " " << idx << endl;
-	if (horizontal_elements[idy][idx] == NULL)
+	if (horizontal_elements[idy][idx] == NULL || horizontal_elements[idy][idx]->type == 0)
 		return;
 	editing = true;
 	horizontal_elements[idy][idx]->color = 2;
 	keepx = idx;
 	keepy = idy - .5;
 
-	current = horizontal_elements[idy][idx];
-	int type = current->type;
+	currentEdit = horizontal_elements[idy][idx];
+	int type = currentEdit->type;
 	if (type == 1) {
 		prefix = "R =";
-		keep = doubleToStr(current->R);
+		keep = doubleToStr(currentEdit->R);
 		suffix = " ohm";
 	}
 	else if (type == 2) {
 		prefix = "EMF =";
-		keep = doubleToStr(current->EMF);
+		keep = doubleToStr(currentEdit->EMF);
 		suffix = " v.";
 	}
 }
@@ -250,72 +252,164 @@ struct edge {
 	{}
 };
 
-void reCalculate(vector <vector <edge> > &g, map <pair <int, int>, int> &mp) {
-	vector <vector <edge> > v = g;
-	vector <vector <pair <element*, int> > > cycles; //<element, direction>
-	int n = g.size();
-	for (int i = 0; i < n; ) {
-		vector <char> used(n);
-		vector <pair <element*, int>> cycle;
-		vector <pair <element*, int> > pr(n);
-		vector <int> pv(n);
-		int c_start, c_end;
-		std::function<bool(int, int)> dfs;
-		dfs = [&dfs, &used, &v, &cycle, &pr, &c_start, &c_end, &pv] (int cur, int p) {
-			used[cur] = true;
-			for (auto it = v[cur].begin(); it != v[cur].end(); ++it) {
-				auto e = *it;
-				int to = e.vertex;
-				if (to == p)
-					continue;
-				if (to < cur) {
-					pr[to] = { e.el, -1 };
-					pv[to] = cur;
-				} else {
-					pr[to] = { e.el, 1 };
-					pv[to] = cur;
-				}
-				if (used[to]) {
-					c_start = to;
-					c_end =   cur;
-					cycle.push_back(pr[to]);
-					v[cur].erase(it);
-					for (auto it2 = v[to].begin(); it2 != v[to].end(); ++it2)
-						if (it2->vertex == cur) {
-							v[to].erase(it2);
-							return true;
-						}
-					assert(false, "Backward edge doesn't exist");
-				}
-				if (dfs(to, cur))
-					return true;
-			}
-			return false;
-		};
-		if (dfs(i, -1)) {
-			for (; c_end != c_start; c_end = pv[c_end]) 
-				cycle.push_back(pr[c_end]);
-			for (auto &x: cycle) {
-				x.first ->color = 3;
-			}
-		} else {
-			++i;
+void Draw2() {
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	for (int i = 1; i < N; ++i) {
+		for (int j = 0; j < N; ++j) {
+			DrawHorizontal(i, j, horizontal_elements[i][j]);
+			DrawVertical(i, j, vertical_elements[i][j]);
 		}
 	}
-	n = n;
+	glFlush();
+}
+
+bool reCalculate(vector <vector <edge> > &g, map <pair <int, int>, int> &mp) {
+	vector <vector <edge> > v = g;
+	vector <vector <pair <element*, int> > > cycles; //<element, direction>
+	map <element*, int> id;
+	{
+		int n = g.size();
+		for (int i = 0; i < n; ) {
+			vector <char> used(n);
+			vector <pair <element*, int>> cycle;
+			vector <pair <element*, int> > pr(n);
+			vector <int> pv(n);
+			int c_start, c_end;
+			std::function<bool(int, int)> dfs;
+			dfs = [&dfs, &used, &v, &cycle, &pr, &c_start, &c_end, &pv] (int cur, int p) {
+				used[cur] = true;
+				for (auto it = v[cur].begin(); it != v[cur].end(); ++it) {
+					auto e = *it;
+					int to = e.vertex;
+					if (to == p)
+						continue;
+					if (to < cur) {
+						pr[to] = { e.el, -1 };
+						pv[to] = cur;
+					} else {
+						pr[to] = { e.el, 1 };
+						pv[to] = cur;
+					}
+					if (used[to]) {
+						c_start = to;
+						c_end =   cur;
+						cycle.push_back(pr[to]);
+						v[cur].erase(it);
+						for (auto it2 = v[to].begin(); it2 != v[to].end(); ++it2)
+							if (it2->vertex == cur) {
+								v[to].erase(it2);
+								return true;
+							}
+						assert(false, "Backward edge doesn't exist");
+					}
+					if (dfs(to, cur))
+						return true;
+				}
+				return false;
+			};
+			if (dfs(i, -1)) {
+				for (; c_end != c_start; c_end = pv[c_end]) 
+					cycle.push_back(pr[c_end]);
+				for (auto &x: cycle) {
+					if (id.count(x.first) == 0)
+						id[x.first] = id.size();
+					x.first ->color = 3;
+				}
+				Draw2();
+				cycles.push_back(cycle);
+			} else {
+				++i;
+			}
+		}
+	}
+	int m = (int)id.size();
+	vector < vector<double> > a; //for gauss
+	for (auto& x : cycles) {
+		a.push_back(vector<double>(m + 1, 0));
+		for (auto& el : x) {
+			if (el.first->type == 0)
+				continue;
+			int index = id[el.first];
+			if (el.first->type == 1) {
+				a.back()[index] = el.second * el.first->R;
+			} else if (el.first->type == 2) {
+				a.back()[m] += el.second * el.first->EMF;			
+			}
+		}
+	}
+	for (int i = 0; i < g.size(); ++i) {
+		auto& x = g[i];
+		bool need = false;
+		for (auto &y : x) {
+			if (id.count(y.el)) {
+				need = true;
+				break;
+			}
+		}
+		if (need) {
+			a.push_back(vector<double>(m + 1, 0));
+			for (auto &y : x) {
+				int index = id[y.el];
+				int dir = (i < y.vertex) * 2 - 1;
+				a.back()[index] = dir;
+			}
+		}
+	}
+	vector <double> ans;
+	int n = (int)a.size();
+
+	vector<int> where(m, -1);
+	for (int col = 0, row = 0; col<m && row<n; ++col) {
+		int sel = row;
+		for (int i = row; i<n; ++i)
+			if (abs(a[i][col]) > abs(a[sel][col]))
+				sel = i;
+		if (abs(a[sel][col]) < EPS)
+			continue;
+		for (int i = col; i <= m; ++i)
+			swap(a[sel][i], a[row][i]);
+		where[col] = row;
+
+		for (int i = 0; i < n; ++i)
+			if (i != row) {
+				double c = a[i][col] / a[row][col];
+				for (int j = col; j <= m; ++j)
+					a[i][j] -= a[row][j] * c;
+			}
+		++row;
+	}
+
+	ans.assign(m, 0);
+	for (int i = 0; i < m; ++i)
+		if (where[i] != -1)
+			ans[i] = a[where[i]][m] / a[where[i]][i];
+
+	for (int i = 0; i < n; ++i) {
+		double sum = 0;
+		for (int j = 0; j<m; ++j)
+			sum += ans[j] * a[i][j];
+		if (abs(sum - a[i][m]) > EPS)
+			return false;
+	}
+
+	for (int i = 0; i<m; ++i)
+		if (where[i] == -1)
+			return false; //?can this happen?
+	return true;
 }
 
 void stopEditing() {
 	editing = false;
-	int type = current->type;
+	int type = currentEdit->type;
 	try {
 		double thing = stod(keep);
 		if (type == 1) {
-			current->R = thing;
+			currentEdit->R = thing;
 		} else if (type == 2) {
-			current->EMF = thing;
+			currentEdit->EMF = thing;
 		}
-		current->color = -1;
+		currentEdit->color = -1;
 	} catch (exception e) {
 
 	}
