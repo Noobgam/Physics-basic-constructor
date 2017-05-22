@@ -17,6 +17,7 @@ using namespace std;
 #define COLOR_RED 0.7, 0.2, 0.2
 #define COLOR_YELLOW 0.8, 0.8, 0.1
 #define COLOR_BLUE 0.1, 0.1, 0.8
+#define COLOR_ORANGE 1.0, 0.64, 0.0
 
 const int N = 10;
 const long double EPS = 1e-6;
@@ -36,6 +37,7 @@ struct element {
 	element() {
 		type = 0;
 		color = -1;
+		I = 0;
 	}
 	element& nextType() {
 		++type;
@@ -43,7 +45,7 @@ struct element {
 		if (type == TYPES)
 			type = 0;
 		if (type == 1)
-			R = 0;
+			R = 1.0;
 		if (type == 2)
 			EMF = 1;
 		return *this;
@@ -68,6 +70,9 @@ void setColor(int color) {
 		case 3:
 			glColor3f(COLOR_BLUE);
 			break;
+		case 4:
+			glColor3f(COLOR_ORANGE);
+			break;
 		default:
 			glColor3f(COLOR_GRAY);
 			break;
@@ -88,21 +93,36 @@ void DrawRect(double x1, double y1, double x2, double y2) {
 	DrawLine(x1, y2, x1, y1);
 }
 
-void DrawHorizontal(int i, int j, element* e) {
+void DrawHorizontal(int i, int j, element* e, int color =-2) {
+	int keep = -2;
+	if (e != NULL && color != -2) {
+		keep = e->color;
+		e->color = color;
+	}		
 	if (e == NULL) {
 		glColor3f(COLOR_GRAY);
 		double y  = (.0 +  i) / N;
 		double xl = (.0 +  j) / N;
 		double xr = (1.0 + j) / N;
 		DrawLine(xl, y, xr, y);
-		if (calculating); //TODO: this
 	} else if (e->type == 0) {
 		setColor(e->color);
 		double y = (.0 + i) / N;
 		double xl = (.0 + j) / N;
 		double xr = (1.0 + j) / N;
 		DrawLine(xl, y, xr, y);
-		if (calculating); //TODO: this
+		if (calculating) {
+			glColor3f(COLOR_ORANGE);
+			double current = e->I;
+			if (current > 0) {
+				DrawLine(xl, y, xl + 0.2 / N, y + 0.1 / N);
+				DrawLine(xl, y, xl + 0.2 / N, y - 0.1 / N);
+			}
+			else if (current < 0) {
+				DrawLine(xr, y, xr - 0.2 / N, y + 0.1 / N);
+				DrawLine(xr, y, xr - 0.2 / N, y - 0.1 / N);
+			}
+		}
 	} else if (e->type == 1) {
 		setColor(e->color);
 		double y = (.0 + i) / N;
@@ -111,7 +131,18 @@ void DrawHorizontal(int i, int j, element* e) {
 		DrawLine(xl, y, (3 * xl + 1 * xr) / 4, y);
 		DrawLine(xr, y, (1 * xl + 3 * xr) / 4, y);
 		DrawRect((3 * xl + 1 * xr) / 4, y - RGAPY / 5, (1 * xl + 3 * xr) / 4, y + RGAPY / 5);
-		if (calculating); //TODO: this
+		if (calculating) {
+			glColor3f(COLOR_ORANGE);
+			double current = e->I;
+			if (current > 0) {
+				DrawLine(xl, y, xl + 0.2 / N, y + 0.1 / N);
+				DrawLine(xl, y, xl + 0.2 / N, y - 0.1 / N);
+			}
+			else if (current < 0) {
+				DrawLine(xr, y, xr - 0.2 / N, y + 0.1 / N);
+				DrawLine(xr, y, xr - 0.2 / N, y - 0.1 / N);
+			}
+		}
 	} else if (e->type == 2) {
 		setColor(e->color);
 		double y = (.0 + i) / N;
@@ -120,8 +151,8 @@ void DrawHorizontal(int i, int j, element* e) {
 		DrawLine(xl, y, (3 * xl + 1 * xr) / 4, y);
 		DrawLine(xr, y, (1 * xl + 3 * xr) / 4, y);
 		if (abs(e->EMF) < EPS) {
-			DrawLine(xl, y, xr, y);		
 			e->type = 0; //this is not EMF, this is a wire
+			DrawHorizontal(i, j, e);
 		} else if (e->EMF > 0) {
 			DrawLine((3 * xl + 1 * xr) / 4, y - RGAPY / 3, (3 * xl + 1 * xr) / 4, y + RGAPY / 3);
 			DrawLine((1 * xl + 3 * xr) / 4, y - RGAPY / 6, (1 * xl + 3 * xr) / 4, y + RGAPY / 6);
@@ -129,18 +160,36 @@ void DrawHorizontal(int i, int j, element* e) {
 			DrawLine((3 * xl + 1 * xr) / 4, y - RGAPY / 6, (3 * xl + 1 * xr) / 4, y + RGAPY / 6);
 			DrawLine((1 * xl + 3 * xr) / 4, y - RGAPY / 3, (1 * xl + 3 * xr) / 4, y + RGAPY / 3);
 		}
-		if (calculating); //TODO: this
-	} 
+		if (calculating) {
+			glColor3f(COLOR_ORANGE);
+			double current = e->I;
+			if (current > 0) {
+				DrawLine(xl, y, xl + 0.2 / N, y + 0.1 / N);
+				DrawLine(xl, y, xl + 0.2 / N, y - 0.1 / N);
+			}
+			else if (current < 0) {
+				DrawLine(xr, y, xr - 0.2 / N, y + 0.1 / N);
+				DrawLine(xr, y, xr - 0.2 / N, y - 0.1 / N);
+			}
+		}
+	}
+	if (e != NULL && color != -2) {
+		e->color = keep;
+	}
 }
 
-void DrawVertical(int i, int j, element* e) {
+void DrawVertical(int i, int j, element* e, int color = -2) {
+	int keep = -2;
+	if (e != NULL && color != -2) {
+		keep = e->color;
+		e->color = color;
+	}
 	if (e == NULL) {
 		glColor3f(COLOR_GRAY);
 		double x = (.0 + i) / N;
 		double yl = (.0 + j) / N;
 		double yr = (1.0 + j) / N;
 		DrawLine(x, yl, x, yr);
-		if (calculating); //TODO: this
 	}
 	else if (e->type == 0) {
 		setColor(e->color);
@@ -148,7 +197,18 @@ void DrawVertical(int i, int j, element* e) {
 		double yl = (.0 + j) / N;
 		double yr = (1.0 + j) / N;
 		DrawLine(x, yl, x, yr);
-		if (calculating); //TODO: this
+		if (calculating) {
+			glColor3f(COLOR_ORANGE);
+			double current = e->I;
+			if (current > 0) {
+				DrawLine(x, yl, x + 0.1 / N, yl + 0.2 / N);
+				DrawLine(x, yl, x - 0.1 / N, yl + 0.2 / N);
+			}
+			else if (current < 0) {
+				DrawLine(x, yr, x + 0.1 / N, yr - 0.2 / N);
+				DrawLine(x, yr, x - 0.1 / N, yr - 0.2 / N);
+			}
+		}
 	} else if (e->type == 1) {
 		setColor(e->color);
 		double x = (.0 + i) / N;
@@ -157,7 +217,18 @@ void DrawVertical(int i, int j, element* e) {
 		DrawLine(x, (3 * yl + 1 * yr) / 4, x, yl);
 		DrawLine(x, (1 * yl + 3 * yr) / 4, x, yr);
 		DrawRect(x - RGAPX / 5, (3 * yl + 1 * yr) / 4, x + RGAPX / 5, (1 * yl + 3 * yr) / 4);
-		if (calculating); //TODO: this
+		if (calculating) {
+			glColor3f(COLOR_ORANGE);
+			double current = e->I;
+			if (current > 0) {
+				DrawLine(x, yl, x + 0.1 / N, yl + 0.2 / N);
+				DrawLine(x, yl, x - 0.1 / N, yl + 0.2 / N);
+			}
+			else if (current < 0) {
+				DrawLine(x, yr, x + 0.1 / N, yr - 0.2 / N);
+				DrawLine(x, yr, x - 0.1 / N, yr - 0.2 / N);
+			}
+		}
 	} else if (e->type == 2) {
 		setColor(e->color);
 		double x = (.0 + i) / N;
@@ -167,24 +238,39 @@ void DrawVertical(int i, int j, element* e) {
 		DrawLine(x, (1 * yl + 3 * yr) / 4, x, yr);
 		//TODO: check for EMF, reverse object direction.
 		if (abs(e->EMF) < EPS) {
-			DrawLine(x, yl, x, yr);
 			e->type = 0; //this is not EMF, this is a wire
+			DrawVertical(i, j, e);
 		}
 		else if (e->EMF > 0) {
-			DrawLine(x - RGAPX / 3, (1 * yl + 3 * yr) / 4, x + RGAPX / 3, (1 * yl + 3 * yr) / 4);
-			DrawLine(x - RGAPX / 6, (3 * yl + 1 * yr) / 4, x + RGAPX / 6, (3 * yl + 1 * yr) / 4);
-		}
-		else if (e->EMF < 0) {
 			DrawLine(x - RGAPX / 6, (1 * yl + 3 * yr) / 4, x + RGAPX / 6, (1 * yl + 3 * yr) / 4);
 			DrawLine(x - RGAPX / 3, (3 * yl + 1 * yr) / 4, x + RGAPX / 3, (3 * yl + 1 * yr) / 4);
 		}
-		if (calculating); //TODO: this
+		else if (e->EMF < 0) {
+			DrawLine(x - RGAPX / 3, (1 * yl + 3 * yr) / 4, x + RGAPX / 3, (1 * yl + 3 * yr) / 4);
+			DrawLine(x - RGAPX / 6, (3 * yl + 1 * yr) / 4, x + RGAPX / 6, (3 * yl + 1 * yr) / 4);
+		}
+		if (calculating) {
+			glColor3f(COLOR_ORANGE);
+			double current = e->I;
+			if (current > 0) {
+				DrawLine(x, yl, x + 0.1 / N, yl + 0.2 / N);
+				DrawLine(x, yl, x - 0.1 / N, yl + 0.2 / N);
+			}
+			else if (current < 0) {
+				DrawLine(x, yr, x + 0.1 / N, yr - 0.2 / N);
+				DrawLine(x, yr, x - 0.1 / N, yr - 0.2 / N);
+			}
+		}
+	}
+	if (e != NULL && color != -2) {
+		e->color = keep;
 	}
 }
 
-
-
+bool showing = false;
 bool editing = false;
+bool canCalc = true;
+element* last = NULL;
 double keepx, keepy;
 string prefix, suffix;
 string keep;
@@ -252,18 +338,6 @@ struct edge {
 	{}
 };
 
-void Draw2() {
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-	glClear(GL_COLOR_BUFFER_BIT);
-	for (int i = 1; i < N; ++i) {
-		for (int j = 0; j < N; ++j) {
-			DrawHorizontal(i, j, horizontal_elements[i][j]);
-			DrawVertical(i, j, vertical_elements[i][j]);
-		}
-	}
-	glFlush();
-}
-
 bool reCalculate(vector <vector <edge> > &g, map <pair <int, int>, int> &mp) {
 	vector <vector <edge> > v = g;
 	vector <vector <pair <element*, int> > > cycles; //<element, direction>
@@ -314,9 +388,7 @@ bool reCalculate(vector <vector <edge> > &g, map <pair <int, int>, int> &mp) {
 				for (auto &x: cycle) {
 					if (id.count(x.first) == 0)
 						id[x.first] = id.size();
-					x.first ->color = 3;
 				}
-				Draw2();
 				cycles.push_back(cycle);
 			} else {
 				++i;
@@ -324,9 +396,9 @@ bool reCalculate(vector <vector <edge> > &g, map <pair <int, int>, int> &mp) {
 		}
 	}
 	int m = (int)id.size();
-	vector < vector<double> > a; //for gauss
+	vector < vector<long double> > a; //for gauss
 	for (auto& x : cycles) {
-		a.push_back(vector<double>(m + 1, 0));
+		a.push_back(vector<long double>(m + 1, 0));
 		for (auto& el : x) {
 			if (el.first->type == 0)
 				continue;
@@ -348,15 +420,17 @@ bool reCalculate(vector <vector <edge> > &g, map <pair <int, int>, int> &mp) {
 			}
 		}
 		if (need) {
-			a.push_back(vector<double>(m + 1, 0));
+			a.push_back(vector<long double>(m + 1, 0));
 			for (auto &y : x) {
+				if (!id.count(y.el))
+					continue;
 				int index = id[y.el];
 				int dir = (i < y.vertex) * 2 - 1;
 				a.back()[index] = dir;
 			}
 		}
 	}
-	vector <double> ans;
+	vector <long double> ans;
 	int n = (int)a.size();
 
 	vector<int> where(m, -1);
@@ -373,7 +447,7 @@ bool reCalculate(vector <vector <edge> > &g, map <pair <int, int>, int> &mp) {
 
 		for (int i = 0; i < n; ++i)
 			if (i != row) {
-				double c = a[i][col] / a[row][col];
+				long double c = a[i][col] / a[row][col];
 				for (int j = col; j <= m; ++j)
 					a[i][j] -= a[row][j] * c;
 			}
@@ -387,15 +461,19 @@ bool reCalculate(vector <vector <edge> > &g, map <pair <int, int>, int> &mp) {
 
 	for (int i = 0; i < n; ++i) {
 		double sum = 0;
-		for (int j = 0; j<m; ++j)
+		for (int j = 0; j < m; ++j)
 			sum += ans[j] * a[i][j];
 		if (abs(sum - a[i][m]) > EPS)
 			return false;
 	}
 
-	for (int i = 0; i<m; ++i)
+	for (int i = 0; i < m; ++i)
 		if (where[i] == -1)
 			return false; //?can this happen?
+
+	for (auto &x : id) {
+		x.first->I = ans[x.second];
+	}
 	return true;
 }
 
@@ -415,9 +493,16 @@ void stopEditing() {
 	}
 }
 
-void Draw() {
+void Draw(string writeOnTop = "", element* selected = NULL) {
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT);
+	if (writeOnTop != "") {
+		setColor(4);
+		glRasterPos2f(0, 1.0 - 24.0 / windowY);
+		for (auto x : writeOnTop) {
+			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, x);
+		}
+	}
 	if (editing) {
 		glColor3f(COLOR_YELLOW); 
 		glRasterPos2f((.0 + keepx) / N, (.0 + keepy) / N);
@@ -427,7 +512,6 @@ void Draw() {
 			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, x);
 		for (auto x : suffix)
 			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, x);
-		//glutPostRedisplay();
 	}
 	if (calculating) {
 		map <pair <int, int>, int> mp;
@@ -443,6 +527,7 @@ void Draw() {
 				element* tmp = horizontal_elements[i][j];
 				if (tmp != NULL) {
 					//horizontal_elements[i][j]->color = 3;
+					tmp->I = 0;
 					int l = mp[{i, j}];
 					int r = mp[{i, j + 1}];
 					v[l].push_back(edge(r, tmp));
@@ -453,23 +538,45 @@ void Draw() {
 			for (int i = 1; i < N - 1; ++i) {
 				//literally {i, j} -> {i + 1, j}
 				element* tmp = vertical_elements[j][i];
-				if (tmp != NULL) {
+				if (tmp != NULL) {					
 					//tmp->color = 3;
+					tmp->I = 0;
 					int l = mp[{i, j}];
 					int r = mp[{i + 1, j}];
 					v[l].push_back(edge(r, tmp));
 					v[r].push_back(edge(l, tmp));
 				}
 			}
-		reCalculate(v, mp);
+		if (!reCalculate(v, mp)) {
+			setColor(1);
+			glRasterPos2f(0, 1.0 - 24.0 / windowY );
+			string tmp = "Unable to solve the circuit for currents.";
+			for (auto x : tmp) {
+				glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, x);
+			}				
+			canCalc = false;
+			last = NULL;
+		} else {
+			canCalc = true;
+		}
 	}
 	for (int i = 1; i < N; ++i) {
 		for (int j = 0; j < N; ++j) {
-			DrawHorizontal(i, j, horizontal_elements[i][j]);
-			DrawVertical  (i, j, vertical_elements[i][j]);
+			if (horizontal_elements[i][j] == selected)
+				DrawHorizontal(i, j, horizontal_elements[i][j], 1);
+			else
+				DrawHorizontal(i, j, horizontal_elements[i][j]);
+			if (vertical_elements[i][j] == selected)
+				DrawVertical  (i, j, vertical_elements[i][j], 1);
+			else
+				DrawVertical(i, j, vertical_elements[i][j]);
 		}
 	}
 	glFlush();
+}
+
+void Draw2() {
+	Draw();
 }
 
 void Initialize() {
@@ -561,6 +668,9 @@ void processMouse(int button, int state, int x, int y) {
 	} else if (distX <= GAPX / 4) {
 		int idx = closestX / GAPX;
 		int idy = y / GAPY;
+		calculating = 0;
+		canCalc = false;
+		last = NULL;
 		if (button == 0 && state == 1)
 			processClickOnVertical(idx, idy, 1);
 		if (button == 2 && state == 1)
@@ -568,6 +678,9 @@ void processMouse(int button, int state, int x, int y) {
 	} else if (distY <= GAPY / 4) {
 		int idx = x / GAPX;
 		int idy = closestY / GAPY;
+		calculating = 0;
+		canCalc = false;
+		last = NULL;
 		if (button == 0 && state == 1)
 			processClickOnHorizontal(idy, idx, 1);
 		if (button == 2 && state == 1)
@@ -594,6 +707,9 @@ void processKeyboard(unsigned char key,	int x, int y) {
 			keep.push_back(key);
 		}
 	} else if (key == 'e') {
+		calculating = 0;
+		canCalc = false;
+		last = NULL;
 		y = windowY - y;
 		int closestX;
 		if (x <= GAPX)
@@ -644,16 +760,98 @@ void processKeyboard(unsigned char key,	int x, int y) {
 		}
 	} else if (key == 'q') {
 		calculating ^= 1;
+		canCalc = false;
+	} else if (key == 'r') {
+		if (canCalc) {
+			showing ^= 1;
+		}
 	}
 	Draw();
 }
+
+
 
 void processMouseActiveMotion(int x, int y) {
 	//cerr << "Active: " << x << " " << y << endl;
 }
 
+
 void processMousePassiveMotion(int x, int y) {
-	//cerr << "Passive: " << x << " " << y << endl;
+	cerr << "Passive: " << x << " " << y << endl;
+	if (!canCalc)
+		return;
+	element* e = NULL;
+	y = windowY - y;
+	int closestX;
+	if (x <= GAPX)
+		closestX = GAPX;
+	else if (x >= windowX - GAPX)
+		closestX = windowX - GAPX;
+	else {
+		int l = x / GAPX * GAPX;
+		int r = (x + GAPX - 1) / GAPX * GAPX;
+		if (x - l <= r - x)
+			closestX = l;
+		else
+			closestX = r;
+	}
+	int distX = abs(x - closestX);
+
+	int closestY;
+	if (y <= GAPY)
+		closestY = GAPY;
+	else if (y >= windowY - GAPY)
+		closestY = windowY - GAPY;
+	else {
+		int l = y / GAPY * GAPY;
+		int r = (y + GAPY - 1) / GAPY * GAPY;
+		if (y - l <= r - y)
+			closestY = l;
+		else
+			closestY = r;
+	}
+	int distY = abs(y - closestY);
+	cerr << distX << " : " << distX << endl;
+	if (distX <= GAPX / 4 && distY <= GAPY / 4) {
+		cerr << "Intersection.\n";
+	}
+	else if (distX <= GAPX / 4) {
+		int idx = closestX / GAPX;
+		int idy = y / GAPY;
+		e = vertical_elements[idx][idy];
+	}
+	else if (distY <= GAPY / 4) {
+		int idx = x / GAPX;
+		int idy = closestY / GAPY;
+		e = horizontal_elements[idy][idx];
+	}
+	else {
+		cerr << "Nothing\n";
+	}
+	if (e != last) {
+		if (e != NULL) {
+			string prefix;
+			if (e->type == 0) {
+				prefix = "Current through wire: ";
+			} else if (e->type == 1) {
+				prefix = "Current through resistor: ";
+			} else if (e->type == 2) {
+				prefix = "Current through EMF: ";		
+			}
+			double val = abs(e->I);
+			string ext = "A";
+			if (val < 1 - EPS) {
+				val *= 1000;
+				ext = "mA";
+			} else if (val >= 1000 + EPS) {
+				val /= 1000;
+				ext = "MA";
+			}
+			string suffix = doubleToStr(val);
+			Draw(prefix + suffix + ext, e);
+		}
+		last = e;
+	}
 }
 
 void processMouseEntry(int state) {
@@ -668,7 +866,7 @@ int main(int iArgc, char** cppArgv) {
 	//glutInitWindowPosition(200, 200);
 	glutCreateWindow("Конструктор схем");
 	Initialize();
-	glutDisplayFunc(Draw);
+	glutDisplayFunc(Draw2);
 	glutMouseFunc(processMouse);
 	glutKeyboardFunc(processKeyboard);
 	glutMotionFunc(processMouseActiveMotion);
